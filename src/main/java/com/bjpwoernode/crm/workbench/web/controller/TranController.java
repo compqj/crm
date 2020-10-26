@@ -13,9 +13,11 @@ import com.bjpwoernode.crm.workbench.domain.*;
 import com.bjpwoernode.crm.workbench.service.ActivityService;
 import com.bjpwoernode.crm.workbench.service.ClueService;
 import com.bjpwoernode.crm.workbench.service.CustomerService;
+import com.bjpwoernode.crm.workbench.service.TranService;
 import com.bjpwoernode.crm.workbench.service.impl.ActivityServiceImpl;
 import com.bjpwoernode.crm.workbench.service.impl.ClueServiceImpl;
 import com.bjpwoernode.crm.workbench.service.impl.CustomerServiceImpl;
+import com.bjpwoernode.crm.workbench.service.impl.TranServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -42,7 +44,79 @@ public class TranController extends HttpServlet {
 
             getCustomerName(request,response);
 
+        }else if("/workbench/transaction/save.do".equals(path)){
+
+            save(request,response);
+
+        }else if("/workbench/transaction/detail.do".equals(path)){
+
+            detail(request,response);
+
         }
+    }
+
+    private void detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("跳转到交易详细信息页");
+        String id = request.getParameter("id");
+        TranService ts = (TranService) ServiceFactory.getService(new TranServiceImpl());
+        Tran t = ts.detail(id);
+        //处理可能性
+        String stage = t.getStage();
+        Map<String,String> pMap = (Map<String, String>) this.getServletContext().getAttribute("pMap");
+        String possibility = pMap.get(stage);
+        //给Tran加一个possibility属性,赋值
+        t.setPossibility(possibility);
+
+        request.setAttribute("t",t);
+        request.getRequestDispatcher("/workbench/transaction/detail.jsp").forward(request,response);
+
+    }
+
+    private void save(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("执行添加交易的操作");
+
+        String id = UUIDUtil.getUUID();
+        String owner = request.getParameter("owner");
+        String money = request.getParameter("money");
+        String name = request.getParameter("name");
+        String expectedDate = request.getParameter("expectedDate");
+        String customerName = request.getParameter("customerName");//暂时只有客户名称，没有ids
+        String stage = request.getParameter("stage");
+        String type = request.getParameter("type");
+        String source = request.getParameter("source");
+        String activityId = request.getParameter("activityId");
+        String contactsId = request.getParameter("contactsId");
+        //创建时间，当前系统时间
+        String createTime = DateTimeUtil.getSysTime();
+        //创建人，当前登录用户
+        String createBy = ((User)request.getSession().getAttribute("user")).getName();
+        String description = request.getParameter("description");
+        String contactSummary = request.getParameter("contactSummary");
+        String nextContactTime = request.getParameter("nextContactTime");
+
+        Tran t = new Tran();
+        t.setId(id);
+        t.setOwner(owner);
+        t.setMoney(money);
+        t.setName(name);
+        t.setExpectedDate(expectedDate);
+        t.setStage(stage);
+        t.setType(type);
+        t.setSource(source);
+        t.setActivityId(activityId);
+        t.setContactsId(contactsId);
+        t.setCreateTime(createTime);
+        t.setCreateBy(createBy);
+        t.setDescription(description);
+        t.setContactSummary(contactSummary);
+        t.setNextContactTime(nextContactTime);
+
+        TranService ts = (TranService) ServiceFactory.getService(new TranServiceImpl());
+        boolean flag = ts.save(t,customerName);
+        if (flag){
+            response.sendRedirect(request.getContextPath()+"/workbench/transaction/index.jsp");
+        }
+
     }
 
     private void getCustomerName(HttpServletRequest request, HttpServletResponse response) {
