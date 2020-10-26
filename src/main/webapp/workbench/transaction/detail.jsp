@@ -89,8 +89,34 @@ request.getContextPath() + "/";
                         }
                     }, 100);
                 });
+		//在页面加载完毕后，加载交易历史列表
+		showHistoryList();
 	});
 	
+	function showHistoryList() {
+		$.ajax({
+			url : "workbench/transaction/getHistoryListByTranId.do",
+			data : {
+				"tranId" : "${t.id}"
+			},
+			type : "get",
+			dataType : "json",
+			success : function (data) {
+				var html = "";
+				$.each(data,function (i,n) {
+					html += '<tr>';
+					html += '<td>'+n.stage+'</td>';
+					html += '<td>'+n.money+'</td>';
+					html += '<td>'+n.possibility+'</td>';
+					html += '<td>'+n.expectedDate+'</td>';
+					html += '<td>'+n.createTime+'</td>';
+					html += '<td>'+n.createBy+'</td>';
+					html += '</tr>';
+				})
+				$("#tranHistoryBody").html(html);
+			}
+		})
+	}
 	
 	
 </script>
@@ -283,8 +309,8 @@ request.getContextPath() + "/";
 							<td>创建人</td>
 						</tr>
 					</thead>
-					<tbody>
-						<tr>
+					<tbody id="tranHistoryBody">
+						<%--<tr>
 							<td>资质审查</td>
 							<td>5,000</td>
 							<td>10</td>
@@ -307,7 +333,7 @@ request.getContextPath() + "/";
 							<td>2017-02-07</td>
 							<td>2017-02-09 10:10:10</td>
 							<td>zhangsan</td>
-						</tr>
+						</tr>--%>
 					</tbody>
 				</table>
 			</div>

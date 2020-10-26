@@ -52,7 +52,30 @@ public class TranController extends HttpServlet {
 
             detail(request,response);
 
+        }else if("/workbench/transaction/getHistoryListByTranId.do".equals(path)){
+
+            getHistoryListByTranId(request,response);
+
         }
+    }
+
+    private void getHistoryListByTranId(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("根据id取得相应的历史列表");
+        String tranId = request.getParameter("tranId");
+        TranService ts = (TranService) ServiceFactory.getService(new TranServiceImpl());
+        List<TranHistory> thList = ts.getHistoryListByTranId(tranId);
+        //阶段和可能性对应关系
+        Map<String,String> pMap = (Map<String, String>) this.getServletContext().getAttribute("pMap");
+        //将交易历史列表遍历
+        for (TranHistory th : thList){
+            //根据每一条交易历史取出每一个阶段
+            String stage = th.getStage();
+            String possibility = pMap.get(stage);
+            th.setPossibility(possibility);
+        }
+
+
+        PrintJson.printJsonObj(response,thList);
     }
 
     private void detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
